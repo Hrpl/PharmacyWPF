@@ -12,8 +12,8 @@ public partial class MedicInOrder
     public int MedicineId { get; set; }
 
     public int Quantity { get; set; }
-
-    public int PriceForOne { get; set; }
+    
+    public int? PriceForOne { get; set; }
 
     public virtual Medicine Medicine { get; set; } = null!;
 

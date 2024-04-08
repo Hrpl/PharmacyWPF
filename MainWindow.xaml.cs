@@ -1,5 +1,6 @@
 ﻿using Pharmacy.Models;
 using Pharmacy.ViewModels;
+using System.Diagnostics;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
@@ -24,12 +25,14 @@ namespace Pharmacy
         public Employee User = new Employee();
         public Medicine AddMedicine = new Medicine();
         public List<MedicInRequest> MedicineInRequest = new();
+        public List<MedicInRequest> AcceptMedic = new();
+        public List<MedicInOrder> MedicineInOrder = new();
 
         
         public MainWindow(Employee _user)
         {
-
             InitializeComponent();
+
             using (PharmacyDbContext db = new PharmacyDbContext())
             {
                 sortUserComboBox.ItemsSource = new List<string>() { "По возрастанию цены", "По убыванию цены" };
@@ -40,17 +43,33 @@ namespace Pharmacy
                 countProducts.Text = $"Количество: {db.Medicines.Count()}";
             }
 
+            if (_user.RoleId == 3)
+            {
+                PanelMainEmployee.Visibility = Visibility.Collapsed;
+                PanelEmployee.Visibility = Visibility.Visible;
+            }
+
+            if (_user.RoleId == 2)
+            {
+                PanelMainEmployee.Visibility = Visibility.Visible;
+                PanelEmployee.Visibility = Visibility.Collapsed;
+            }
+
             this.DataContext = new ListMedicine();
             _user = User;
         }
 
         private void ViewListMedicine(object sender, RoutedEventArgs e) //Главный врач
         {
+            addedMedInAccept.Visibility = Visibility.Collapsed;
+            AcceptRequest.Visibility = Visibility.Collapsed;
             medicineListView.Visibility = Visibility.Visible;
             FilterPanel.Visibility = Visibility.Visible;
             stackPanelMedicine.Visibility = Visibility.Collapsed;
             stackPanelRequest.Visibility = Visibility.Collapsed;
             ViewIssueList.Visibility = Visibility.Collapsed;
+            addedMedInOrder.Visibility = Visibility.Collapsed;
+            AddOrder.Visibility = Visibility.Collapsed;
 
             using (PharmacyDbContext db = new PharmacyDbContext())
             {
@@ -60,19 +79,57 @@ namespace Pharmacy
 
         private void RouteToAddMedicine(object sender, RoutedEventArgs e)//Главный врач
         {
+            addedMedInAccept.Visibility = Visibility.Collapsed;
+            AcceptRequest.Visibility = Visibility.Collapsed;
             medicineListView.Visibility = Visibility.Collapsed;
             stackPanelRequest.Visibility = Visibility.Collapsed;
+
             stackPanelMedicine.Visibility = Visibility.Visible;
+
             ViewIssueList.Visibility = Visibility.Collapsed;
             FilterPanel.Visibility = Visibility.Collapsed;
+            addedMedInOrder.Visibility = Visibility.Collapsed;
+            AddOrder.Visibility = Visibility.Collapsed;
         }
         private void RouteToAddRequest(object sender, RoutedEventArgs e)//Главный врач
         {
+            addedMedInOrder.Visibility = Visibility.Collapsed;
+            AddOrder.Visibility = Visibility.Collapsed;
+            addedMedInAccept.Visibility = Visibility.Collapsed;
+            AcceptRequest.Visibility = Visibility.Collapsed;
             medicineListView.Visibility = Visibility.Collapsed;
             stackPanelMedicine.Visibility = Visibility.Collapsed;
             FilterPanel.Visibility = Visibility.Collapsed;
+
             stackPanelRequest.Visibility = Visibility.Visible;
             ViewIssueList.Visibility = Visibility.Visible;
+        }
+        private void RouteToAddOrder(object sender, RoutedEventArgs e) // сотрудник
+        {
+            addedMedInAccept.Visibility = Visibility.Collapsed;
+            AcceptRequest.Visibility = Visibility.Collapsed;
+            medicineListView.Visibility = Visibility.Collapsed;
+            stackPanelMedicine.Visibility = Visibility.Collapsed;
+            FilterPanel.Visibility = Visibility.Collapsed;
+            stackPanelRequest.Visibility = Visibility.Collapsed;
+            ViewIssueList.Visibility = Visibility.Collapsed;
+
+            addedMedInOrder.Visibility = Visibility.Visible;
+            AddOrder.Visibility = Visibility.Visible;
+        }
+
+        private void RouteToAcceptRequest(object sender, RoutedEventArgs e)// сотрудник
+        {
+            addedMedInAccept.Visibility = Visibility.Visible;
+            AcceptRequest.Visibility = Visibility.Visible;
+
+            addedMedInOrder.Visibility = Visibility.Collapsed;
+            AddOrder.Visibility = Visibility.Collapsed;
+            medicineListView.Visibility = Visibility.Collapsed;
+            stackPanelMedicine.Visibility = Visibility.Collapsed;
+            FilterPanel.Visibility = Visibility.Collapsed;
+            stackPanelRequest.Visibility = Visibility.Collapsed;
+            ViewIssueList.Visibility = Visibility.Collapsed;
         }
         private void ExitWindow(object sender, RoutedEventArgs e)
         {
@@ -82,20 +139,31 @@ namespace Pharmacy
 
         private void NewMedicine(object sender, RoutedEventArgs e)
         {
-
             using (PharmacyDbContext db = new PharmacyDbContext())
             {
-                AddMedicine.Name = NameMedicine.Text;
-                AddMedicine.Manufacture = ManufactureMedicine.Text;
-                db.Medicines.Add(AddMedicine);
-                try
-                {
-                    db.SaveChanges();
-                }
-                catch
-                {
+                bool isCurrent = true;
+                if(NameMedicine.Text == "") isCurrent = false;
+                if(ManufactureMedicine.Text == "") isCurrent = false ;
+                if(ManufactureMedicine.Text == "" || Convert.ToInt32(SalePrice.Text) <= 0) isCurrent = false;
 
+                if (isCurrent)
+                {
+                    AddMedicine.Name = NameMedicine.Text;
+                    AddMedicine.Manufacture = ManufactureMedicine.Text;
+                    AddMedicine.Quantity = 0;
+                    AddMedicine.SalePrice = Convert.ToInt32(SalePrice.Text);
+                    db.Medicines.Add(AddMedicine);
+                    try
+                    {
+                        db.SaveChanges();
+                        MessageBox.Show("Лекарство добавлено", "Сообщение", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    }
+                    catch
+                    {
+                        MessageBox.Show("Лекарство не добавлено", "Сообщение", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
                 }
+                else MessageBox.Show("Неверные значения полей", "Сообщение", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
@@ -116,7 +184,6 @@ namespace Pharmacy
                     }
 
                     if (Quantity.Text == "") isCurrent = false;
-                    if (Price.Text == "") isCurrent = false;
 
                     if (isCurrent)
                     {
@@ -125,8 +192,7 @@ namespace Pharmacy
                         {
                             req.MedicineId = med.Id;
                             req.Quantity = Convert.ToInt32(Quantity.Text);
-                            req.InUnitPrice = Convert.ToInt32(Price.Text);
-                            req.AllPrice = req.Quantity * req.InUnitPrice;
+                            
                             MedicineInRequest.Add(req);
                         }
                         catch
@@ -143,7 +209,6 @@ namespace Pharmacy
                 catch { MessageBox.Show("Лекарство не было добавлено", "Сообщение", MessageBoxButtons.OK, MessageBoxIcon.Error); }
             }
             Quantity.Text = "";
-            Price.Text = "";
             issueList.ItemsSource = MedicineInRequest;
         }
 
@@ -153,28 +218,39 @@ namespace Pharmacy
             {
                 if (MedicineInRequest != null)
                 {
-                    var req = new Request();
-                    if (NumberRequest.Text != "" && Provider.Text != "")
+                    bool isCurrent = true;
+
+                    foreach (var item in db.Request.ToList()) // проверка на уникальность номера
                     {
-                        req.DateTime = DateTime.Now;
-                        req.ProviderName = Provider.Text;
-                        req.Status = "Create";
-                        req.Number = NumberRequest.Text;
-                        foreach (var item in MedicineInRequest)
-                        {
-                            item.RequestNumber = NumberRequest.Text;
-                            req.SummaryPrice += item.AllPrice;
-                        }
+                        if(item.Number == NumberRequest.Text) isCurrent = false;
+                    }
 
-                        db.Request.Add(req);
-                        db.MedicInRequest.AddRange(MedicineInRequest);
-
-                        try
+                    if (isCurrent)
+                    {
+                        var req = new Request();
+                        if (NumberRequest.Text != "" && Provider.Text != "")
                         {
-                            db.SaveChanges();
-                            MessageBox.Show("Заявка создана", "Сообщение", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                            req.DateTime = DateTime.Now;
+                            req.ProviderName = Provider.Text;
+                            req.Status = "Create";
+                            req.Number = NumberRequest.Text;
+
+                            foreach (var item in MedicineInRequest)
+                            {
+                                item.RequestNumber = NumberRequest.Text;
+                            }
+
+                            db.Request.Add(req);
+                            db.MedicInRequest.AddRange(MedicineInRequest);
+
+                            try
+                            {
+                                db.SaveChanges();
+                                MessageBox.Show("Заявка создана", "Сообщение", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                                MedicineInRequest = new();
+                            }
+                            catch { MessageBox.Show("Заявка не создана", "Сообщение", MessageBoxButtons.OK, MessageBoxIcon.Error); }
                         }
-                        catch (Exception ex) { MessageBox.Show("Заявка не создана", "Сообщение", MessageBoxButtons.OK, MessageBoxIcon.Error); }
                     }
                     
                 }
@@ -243,5 +319,169 @@ namespace Pharmacy
             }
         }
 
+        private void AddAcceptMedicine(object sender, RoutedEventArgs e)
+        {
+            var med = new MedicInRequest();
+            using (PharmacyDbContext db = new PharmacyDbContext())
+            {
+                try
+                {
+                    med.MedicineId = db.Medicines.Where(m => m.Name == AcceptMedicineComboBox.Text).First().Id;
+                    med.Quantity = Convert.ToInt32(AcceptQuantity.Text);
+                    med.InUnitPrice = Convert.ToInt32(AcceptPrice.Text);
+                    med.AllPrice = med.Quantity * med.InUnitPrice;
+                    AcceptMedic.Add(med);
+                    addedMedInAcceptList.ItemsSource = AcceptMedic;
+                    
+                    MessageBox.Show("Лекарство добавлено", "Сообщение", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+                catch 
+                {
+                    MessageBox.Show("Лекарство не добавлено", "Сообщение", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            }
+        }
+
+        private void AcceptMedicine(object sender, RoutedEventArgs e)
+        {
+            using (PharmacyDbContext db = new PharmacyDbContext())
+            {
+                bool isCurrent = true;
+                int count = 0;
+
+                if (AcceptProvider.Text == "") isCurrent = false;
+                if (AcceptNumberRequest.Text == "") isCurrent = false;
+                if (AcceptPrice.Text == "") isCurrent = false;
+
+                if (isCurrent) // поля не были пусты
+                {
+                    var listMed = db.MedicInRequest.Where(m => m.RequestNumber == AcceptNumberRequest.Text).ToList();
+
+                    if (listMed != null) // есть такие лекарста с номером заявки
+                    {
+                        foreach (var i in listMed)
+                        {
+                            foreach (var j in AcceptMedic)
+                            {
+                                if (i.MedicineId == j.MedicineId && i.Quantity == j.Quantity) count++; //проверка что все лекарства введены
+                            }
+                        }
+                        if (count == listMed.Count) // все ли лекарства пришли
+                        {
+                            var req = db.Request.Where(r => r.ProviderName == AcceptProvider.Text && r.Number == AcceptNumberRequest.Text).FirstOrDefault(); //поиск заявки
+                            if (req != null && req.Status == "Create") // была ли выполнена заявка ранее
+                            {
+                                req.Status = "Accept";
+                                req.SummaryPrice = 0;
+
+                                foreach (var item in AcceptMedic)
+                                {
+
+                                    req.SummaryPrice += item.Quantity * item.InUnitPrice;
+
+                                    var med = db.Medicines.Find(item.MedicineId);
+                                    med.Quantity += item.Quantity;
+
+                                    db.Medicines.Update(med);
+                                }
+
+                                db.Request.Update(req);
+                                db.MedicInRequest.UpdateRange(AcceptMedic);
+
+                                try
+                                {
+                                    db.SaveChanges();
+                                    MessageBox.Show("Накладная принята", "Сообщение", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                                    AcceptMedic = new();
+                                }
+                                catch (Exception)
+                                {
+                                    MessageBox.Show("Ошибка при сохранении", "Сообщение", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                                }
+
+                            }
+                            else MessageBox.Show("Заявка уже принята или её не существует", "Сообщение", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        }
+                        else MessageBox.Show("Накладная не принята", "Сообщение", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
+                    else MessageBox.Show("Не верный номер накладной", "Сообщение", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+                else MessageBox.Show("Поля не заполнены", "Сообщение", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void AddOrderMedicine(object sender, RoutedEventArgs e)
+        {
+            var med = new MedicInOrder();
+            using (PharmacyDbContext db = new PharmacyDbContext())
+            {
+                try
+                {
+                    med.MedicineId = db.Medicines.Where(m => m.Name == OrderMedicineComboBox.SelectedItem).First().Id;
+                    med.PriceForOne = db.Medicines.Where(m => m.Name == OrderMedicineComboBox.SelectedItem).First().SalePrice;
+                    med.Quantity = Convert.ToInt32(OrderQuantity.Text);
+                    MedicineInOrder.Add(med);
+                    addedMedInOrderList.ItemsSource = MedicineInOrder;
+
+                    MessageBox.Show("Лекарство добавлено в заказ", "Сообщение", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+                catch (Exception)
+                {
+                    MessageBox.Show("Лекарство не добавлено в заказ", "Сообщение", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            }
+        }
+
+        private void OrderMedicine(object sender, RoutedEventArgs e)
+        {
+            using (PharmacyDbContext db = new PharmacyDbContext())
+            {
+                var order = new Order();
+                order.Date = DateTime.Now;
+                order.SummaryPrice = 0;
+
+                foreach (var item in MedicineInOrder)
+                {
+                    order.SummaryPrice += item.Quantity * item.PriceForOne;
+                }
+
+                db.Order.Add(order);
+
+                try
+                {
+                    db.SaveChanges();;
+                }
+                catch (Exception)
+                {
+                    MessageBox.Show("Ошибка при сохранении заказа", "Сообщение", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+
+                order = db.Order.ToList().Last();
+
+                foreach (var item in MedicineInOrder)
+                {
+                    item.OrderId = order.Id;
+                }
+
+                db.MedicInOrders.AddRange(MedicineInOrder);
+
+                try
+                {
+                    db.SaveChanges();
+                    MedicineInOrder = new();
+                    MessageBox.Show("Заказ создан", "Сообщение", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+                catch (Exception)
+                {
+                    MessageBox.Show("Ошибка при сохранении позиций заказа", "Сообщение", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            }
+        }
+
+        private void AcceptClearLabel(object sender, RoutedEventArgs e)
+        {
+            AcceptQuantity.Text = "";
+            AcceptMedicineComboBox.SelectedItem = null;
+        }
     }
 }

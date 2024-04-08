@@ -9,7 +9,7 @@ public partial class Order
 
     public DateTime Date { get; set; }
 
-    public int SummaryPrice { get; set; }
+    public int? SummaryPrice { get; set; }
 
     public virtual ICollection<MedicInOrder> MedicInOrders { get; set; } = new List<MedicInOrder>();
 }

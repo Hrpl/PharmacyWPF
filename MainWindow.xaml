@@ -9,34 +9,53 @@
     <Grid>
 
         <Grid.RowDefinitions>
-            <RowDefinition Name="row0" Height="0.4*"></RowDefinition>
+            <RowDefinition Name="row0" Height="Auto"></RowDefinition>
             <RowDefinition Name="row1" Height="Auto"></RowDefinition>
             <RowDefinition Height="2.5*"></RowDefinition>
         </Grid.RowDefinitions>
         
         <!--Меню -->
         <StackPanel Grid.Row="0" Background="#00ca58" Orientation="Horizontal">
-            <Button BorderThickness="0" 
-                    Margin="10" 
-                    FontWeight="Bold" 
-                    Name="listMedicine" 
-                    Click="ViewListMedicine"
-                    Foreground="White">Список лекарств</Button>
-            
-            <Button BorderThickness="0" 
-                    Margin="10" 
-                    FontWeight="Bold" 
-                    Name="addMedicine" 
-                    Click="RouteToAddMedicine" 
-                    Foreground="White">Добавить лекарство</Button>
-            
-            <Button BorderThickness="0" 
-                    Margin="10" 
-                    FontWeight="Bold" 
-                    Name="addRequest" 
-                    Click="RouteToAddRequest" 
-                    Foreground="White">Создать заявку</Button>
+            <StackPanel Orientation="Horizontal" Name="PanelMainEmployee">
+                <Button BorderThickness="0" 
+                        Margin="10" 
+                        FontWeight="Bold" 
+                        Name="listMedicine" 
+                        Click="ViewListMedicine"
+                        Foreground="White">Список лекарств</Button>
 
+                <Button BorderThickness="0" 
+                        Margin="10" 
+                        FontWeight="Bold" 
+                        Name="addMedicine" 
+                        Click="RouteToAddMedicine" 
+                        Foreground="White">Добавить лекарство</Button>
+
+                <Button BorderThickness="0" 
+                        Margin="10" 
+                        FontWeight="Bold" 
+                        Name="addRequest" 
+                        Click="RouteToAddRequest" 
+                        Foreground="White">Создать заявку</Button>
+            </StackPanel>
+            
+            <StackPanel Orientation="Horizontal" Name="PanelEmployee">
+                <Button BorderThickness="0" 
+                        Margin="10" 
+                        FontWeight="Bold" 
+                        Name="acceptRequest" 
+                        Click="RouteToAcceptRequest" 
+                        Foreground="White">Принять заявку</Button>
+
+                <Button BorderThickness="0" 
+                        Margin="10" 
+                        FontWeight="Bold" 
+                        Name="addOrder" 
+                        Click="RouteToAddOrder" 
+                        Foreground="White">Каталог</Button>
+            </StackPanel>
+            
+            
             <Button BorderThickness="0" 
                     Margin="10" 
                     FontWeight="Bold" 
@@ -159,6 +178,9 @@
             <TextBlock Height="20px" FontSize="16" Margin="10">Производитель</TextBlock>
             <TextBox Name="ManufactureMedicine" Height="20px" Width="100"></TextBox>
 
+            <TextBlock Height="20px" FontSize="16" Margin="10">Цена</TextBlock>
+            <TextBox Name="SalePrice" Height="20px" Width="100"></TextBox>
+
             <Button Height="20px" Width="100" Margin="20" Click="NewMedicine">Добавить</Button>
         </StackPanel>
         
@@ -171,8 +193,6 @@
                 <TextBlock Height="20px" FontSize="16" Margin="10">Количество</TextBlock>
                 <TextBox Name="Quantity" Height="20px" Width="100"></TextBox>
 
-                <TextBlock Height="20px" FontSize="16" Margin="10">Цена</TextBlock>
-                <TextBox Name="Price" Height="20px" Width="80"></TextBox>
 
                 <Button Height="20px" Margin="10" Click="AddMedicineInRequest">Добавить лекарство</Button>
             </StackPanel>
@@ -188,7 +208,7 @@
             </StackPanel>
         </StackPanel>
 
-        <!--Cоздать заявку -->
+        <!--Создать заявку -->
         <StackPanel Name="ViewIssueList" Grid.Row="2" Orientation="Vertical" HorizontalAlignment="Center" Margin="10" Visibility="Collapsed">
             <ListView Grid.Row ="2"
                     x:Name="issueList"
@@ -220,6 +240,139 @@
                 </ListView.ItemTemplate>
 
             </ListView>
+        </StackPanel>
+            
+        <!--Принять заявку -->
+        <StackPanel Name="AcceptRequest" Grid.Row="1" HorizontalAlignment="Center" Margin="10" Visibility="Collapsed">
+            <StackPanel Orientation="Horizontal"  HorizontalAlignment="Center">
+                <TextBlock Height="20px" FontSize="16" Margin="10">Лекарство</TextBlock>
+                <ComboBox Name="AcceptMedicineComboBox" ItemsSource="{Binding Items}" Height="20px" Width="100px"></ComboBox>
+
+                <TextBlock Height="20px" FontSize="16" Margin="10">Количество</TextBlock>
+                <TextBox Name="AcceptQuantity" Height="20px" Width="100"></TextBox>
+
+
+                <TextBlock Height="20px" FontSize="16" Margin="10">Цена</TextBlock>
+                <TextBox Name="AcceptPrice" Height="20px" Width="80"></TextBox>
+
+                <Button Height="20px" Margin="10" Click="AddAcceptMedicine">Добавить лекарство</Button>
+                <Button Height="20px" Margin="10" Click="AcceptClearLabel">Очистить</Button>
+            </StackPanel>
+
+            <StackPanel Name="AcceptButton" Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Center" Margin="10" Visibility="Visible">
+
+
+                <TextBlock Height="20px" FontSize="16" Margin="10">Поставщик</TextBlock>
+                <TextBox Name="AcceptProvider" Height="20px" Width="100"></TextBox>
+                
+                <TextBlock Height="20px" FontSize="16" Margin="10">Номер заявки</TextBlock>
+                <TextBox Name="AcceptNumberRequest" Height="20px" Width="100"></TextBox>
+                
+                
+                <Button Height="20px" Margin="10" Click="AcceptMedicine">Принять заявку</Button>
+            </StackPanel>
+        </StackPanel>
+
+        <!--Принять заявку -->
+        <StackPanel Name="addedMedInAccept" Grid.Row="2" HorizontalAlignment="Center" Margin="10" Visibility="Collapsed">
+            <TextBlock FontSize="18">Принятые лекарства</TextBlock>
+            <ListView Grid.Row ="2"
+            x:Name="addedMedInAcceptList"
+            ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+            HorizontalContentAlignment="Center"
+            >
+
+                <ListView.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <WrapPanel Orientation="Horizontal"
+                HorizontalAlignment="Center"/>
+                    </ItemsPanelTemplate>
+                </ListView.ItemsPanel>
+
+                <ListView.ItemTemplate>
+                    <DataTemplate>
+                        <StackPanel Width="300">
+
+                            <TextBlock Text="{Binding MedicineId}"
+                            VerticalAlignment="Center"
+                            TextAlignment="Center"
+                            TextWrapping="Wrap"
+                            HorizontalAlignment="Center"
+                            Margin="0"
+                            FontSize="15"/>
+
+                            <TextBlock Text="{Binding Quantity}"
+                            VerticalAlignment="Center"
+                            TextAlignment="Center"
+                            TextWrapping="Wrap"
+                            HorizontalAlignment="Center"
+                            Margin="0"
+                            FontSize="15"/>
+                        </StackPanel>
+
+                    </DataTemplate>
+                </ListView.ItemTemplate>
+
+            </ListView>
+        </StackPanel>
+
+        <!--Оформить заказ -->
+        <StackPanel Name="AddOrder" Grid.Row="1" HorizontalAlignment="Center" Margin="10" Visibility="Collapsed">
+            <StackPanel Orientation="Horizontal"  HorizontalAlignment="Center">
+                <TextBlock Height="20px" FontSize="16" Margin="10">Лекарство</TextBlock>
+                <ComboBox Name="OrderMedicineComboBox" ItemsSource="{Binding Items}" Height="20px" Width="150px"></ComboBox>
+
+                <TextBlock Height="20px" FontSize="16" Margin="10">Количество</TextBlock>
+                <TextBox Name="OrderQuantity" Height="20px" Width="100"></TextBox>
+
+                <Button Height="20px" Margin="10" Click="AddOrderMedicine">Добавить лекарство</Button>
+            </StackPanel>
+        </StackPanel>
+
+        <!--Оформить заказ -->
+        <StackPanel Name="addedMedInOrder" Grid.Row="2" HorizontalAlignment="Center" Margin="10" Visibility="Collapsed">
+            <TextBlock FontSize="18">Лекарства в заказе</TextBlock>
+            <ListView Grid.Row ="2"
+                        x:Name="addedMedInOrderList"
+                        ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                        HorizontalContentAlignment="Center"
+                        >
+
+                <ListView.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <WrapPanel Orientation="Horizontal"
+        HorizontalAlignment="Center"/>
+                    </ItemsPanelTemplate>
+                </ListView.ItemsPanel>
+
+                <ListView.ItemTemplate>
+                    <DataTemplate>
+                        <StackPanel Width="300">
+
+                            <TextBlock Text="{Binding MedicineId}"
+                    VerticalAlignment="Center"
+                    TextAlignment="Center"
+                    TextWrapping="Wrap"
+                    HorizontalAlignment="Center"
+                    Margin="0"
+                    FontSize="15"/>
+
+                            <TextBlock Text="{Binding Quantity}"
+                    VerticalAlignment="Center"
+                    TextAlignment="Center"
+                    TextWrapping="Wrap"
+                    HorizontalAlignment="Center"
+                    Margin="0"
+                    FontSize="15"/>
+                        </StackPanel>
+
+                    </DataTemplate>
+                </ListView.ItemTemplate>
+
+            </ListView>
+
+            <Button Height="20px" Margin="10" Click="OrderMedicine">Оформить заказ</Button>
+
         </StackPanel>
 
     </Grid>

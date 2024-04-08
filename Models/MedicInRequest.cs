@@ -11,9 +11,9 @@ public partial class MedicInRequest
 
     public int Quantity { get; set; }
 
-    public int InUnitPrice { get; set; }
+    public int? InUnitPrice { get; set; }
 
-    public int AllPrice { get; set; }
+    public int? AllPrice { get; set; }
 
     public string RequestNumber { get; set; }
 
