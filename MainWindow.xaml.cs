@@ -123,6 +123,8 @@ namespace Pharmacy
             addedMedInAccept.Visibility = Visibility.Visible;
             AcceptRequest.Visibility = Visibility.Visible;
 
+            
+
             addedMedInOrder.Visibility = Visibility.Collapsed;
             AddOrder.Visibility = Visibility.Collapsed;
             medicineListView.Visibility = Visibility.Collapsed;
@@ -413,6 +415,7 @@ namespace Pharmacy
         private void AddOrderMedicine(object sender, RoutedEventArgs e)
         {
             var med = new MedicInOrder();
+            bool isRepeat = false;
             using (PharmacyDbContext db = new PharmacyDbContext())
             {
                 try
@@ -420,16 +423,25 @@ namespace Pharmacy
                     med.MedicineId = db.Medicines.Where(m => m.Name == OrderMedicineComboBox.SelectedItem).First().Id;
                     med.PriceForOne = db.Medicines.Where(m => m.Name == OrderMedicineComboBox.SelectedItem).First().SalePrice;
                     med.Quantity = Convert.ToInt32(OrderQuantity.Text);
-                    MedicineInOrder.Add(med);
-                    addedMedInOrderList.ItemsSource = MedicineInOrder;
-
-                    MessageBox.Show("Лекарство добавлено в заказ", "Сообщение", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    foreach (var m in MedicineInOrder)
+                    {
+                        if(m.MedicineId == med.MedicineId) isRepeat = true;
+                    }
+                    if (!isRepeat)
+                    {
+                        MedicineInOrder.Add(med);
+                        
+                        MessageBox.Show("Лекарство добавлено в заказ", "Сообщение", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    }
+                    else { MessageBox.Show("Лекарство уже добавлено в заказ", "Сообщение", MessageBoxButtons.OK, MessageBoxIcon.Error); }
                 }
                 catch (Exception)
                 {
                     MessageBox.Show("Лекарство не добавлено в заказ", "Сообщение", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
+            
+            addedMedInOrderList.ItemsSource = MedicineInOrder;
         }
 
         private void OrderMedicine(object sender, RoutedEventArgs e)
@@ -440,41 +452,45 @@ namespace Pharmacy
                 order.Date = DateTime.Now;
                 order.SummaryPrice = 0;
 
-                foreach (var item in MedicineInOrder)
+                if(MedicineInOrder.Count > 0)
                 {
-                    order.SummaryPrice += item.Quantity * item.PriceForOne;
-                }
+                    foreach (var item in MedicineInOrder)
+                    {
+                        order.SummaryPrice += item.Quantity * item.PriceForOne;
+                    }
 
-                db.Order.Add(order);
+                    db.Order.Add(order);
 
-                try
-                {
-                    db.SaveChanges();;
-                }
-                catch (Exception)
-                {
-                    MessageBox.Show("Ошибка при сохранении заказа", "Сообщение", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                }
+                    try
+                    {
+                        db.SaveChanges(); ;
+                    }
+                    catch (Exception)
+                    {
+                        MessageBox.Show("Ошибка при сохранении заказа", "Сообщение", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
 
-                order = db.Order.ToList().Last();
+                    order = db.Order.ToList().Last();
 
-                foreach (var item in MedicineInOrder)
-                {
-                    item.OrderId = order.Id;
-                }
+                    foreach (var item in MedicineInOrder)
+                    {
+                        item.OrderId = order.Id;
+                    }
 
-                db.MedicInOrders.AddRange(MedicineInOrder);
+                    db.MedicInOrders.AddRange(MedicineInOrder);
 
-                try
-                {
-                    db.SaveChanges();
-                    MedicineInOrder = new();
-                    MessageBox.Show("Заказ создан", "Сообщение", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    try
+                    {
+                        db.SaveChanges();
+                        MedicineInOrder = new();
+                        MessageBox.Show("Заказ создан", "Сообщение", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    }
+                    catch (Exception)
+                    {
+                        MessageBox.Show("Ошибка при сохранении позиций заказа", "Сообщение", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
                 }
-                catch (Exception)
-                {
-                    MessageBox.Show("Ошибка при сохранении позиций заказа", "Сообщение", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                }
+                else MessageBox.Show("В заказ не добавлены лекарства", "Сообщение", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 

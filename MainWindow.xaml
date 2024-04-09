@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Pharmacy"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
+        Title="Pharmacy" Height="450" Width="800">
     <Grid>
 
         <Grid.RowDefinitions>
@@ -347,24 +347,34 @@
 
                 <ListView.ItemTemplate>
                     <DataTemplate>
-                        <StackPanel Width="300">
+                        <Border BorderThickness="2" BorderBrush="Black">
+                            <StackPanel Width="300">
 
-                            <TextBlock Text="{Binding MedicineId}"
-                    VerticalAlignment="Center"
-                    TextAlignment="Center"
-                    TextWrapping="Wrap"
-                    HorizontalAlignment="Center"
-                    Margin="0"
-                    FontSize="15"/>
+                                <TextBlock Text="{Binding MedicineId,StringFormat =Id лекарства: {0}}"
+                                        VerticalAlignment="Center"
+                                        TextAlignment="Center"
+                                        TextWrapping="Wrap"
+                                        HorizontalAlignment="Center"
+                                        Margin="0"
+                                        FontSize="15"/>
 
-                            <TextBlock Text="{Binding Quantity}"
-                    VerticalAlignment="Center"
-                    TextAlignment="Center"
-                    TextWrapping="Wrap"
-                    HorizontalAlignment="Center"
-                    Margin="0"
-                    FontSize="15"/>
-                        </StackPanel>
+                                <TextBlock Text="{Binding Quantity, StringFormat=Количество: {0}}"
+                                        VerticalAlignment="Center"
+                                        TextAlignment="Center"
+                                        TextWrapping="Wrap"
+                                        HorizontalAlignment="Center"
+                                        Margin="0"
+                                        FontSize="15"/>
+                                <TextBlock Text="{Binding PriceForOne, StringFormat=Цена: {0}}"
+                                        VerticalAlignment="Center"
+                                        TextAlignment="Center"
+                                        TextWrapping="Wrap"
+                                        HorizontalAlignment="Center"
+                                        Margin="0"
+                                        FontSize="15"/>
+                            </StackPanel>
+                        </Border>
+                        
 
                     </DataTemplate>
                 </ListView.ItemTemplate>
