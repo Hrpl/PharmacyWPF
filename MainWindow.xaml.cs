@@ -1,5 +1,6 @@
 ﻿using Pharmacy.Models;
 using Pharmacy.ViewModels;
+using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Text;
 using System.Windows;
@@ -24,9 +25,9 @@ namespace Pharmacy
     {
         public Employee User = new Employee();
         public Medicine AddMedicine = new Medicine();
-        public List<MedicInRequest> MedicineInRequest = new();
-        public List<MedicInRequest> AcceptMedic = new();
-        public List<MedicInOrder> MedicineInOrder = new();
+        public ObservableCollection<MedicInRequest> MedicineInRequest = new();
+        public ObservableCollection<MedicInRequest> AcceptMedic = new();
+        public ObservableCollection<MedicInOrder> MedicineInOrder = new();
 
         
         public MainWindow(Employee _user)
@@ -57,6 +58,66 @@ namespace Pharmacy
 
             this.DataContext = new ListMedicine();
             _user = User;
+        }
+
+        private void sortUserComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            Update();
+        }
+
+        private void filterUserComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            Update();
+        }
+
+        private void searchBox_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            Update();
+        }
+
+        private void Update()
+        {
+            using (PharmacyDbContext db = new PharmacyDbContext())
+            {
+
+                var current = db.Medicines.ToList();
+                medicineListView.ItemsSource = current;
+
+                if (sortUserComboBox.SelectedIndex != -1)
+                {
+                    if (sortUserComboBox.SelectedValue == "По убыванию цены")
+                    {
+                        current = db.Medicines.OrderByDescending(u => u.SalePrice).ToList();
+                    }
+
+                    if (sortUserComboBox.SelectedValue == "По возрастанию цены")
+                    {
+                        current = db.Medicines.OrderBy(u => u.SalePrice).ToList();
+                    }
+                }
+
+                if (filterUserComboBox.SelectedIndex != -1)
+                {
+                    if (db.Medicines.Select(u => u.Manufacture).Distinct().ToList().Contains(filterUserComboBox.SelectedValue))
+                    {
+                        current = current.Where(u => u.Manufacture == filterUserComboBox.SelectedValue.ToString()).ToList();
+                    }
+                    else
+                    {
+                        current = current.ToList();
+                    }
+                }
+
+                if (searchBox.Text.Length > 0)
+                {
+
+                    current = current.Where(u => u.Name.Contains(searchBox.Text) || u.Manufacture.Contains(searchBox.Text)).ToList();
+
+                }
+
+                medicineListView.ItemsSource = current;
+                countProducts.Text = $"Количество: {current.Count} из {db.Medicines.ToList().Count}";
+            }
         }
 
         private void ViewListMedicine(object sender, RoutedEventArgs e) //Главный врач
@@ -224,7 +285,12 @@ namespace Pharmacy
 
                     foreach (var item in db.Request.ToList()) // проверка на уникальность номера
                     {
-                        if(item.Number == NumberRequest.Text) isCurrent = false;
+                        if (item.Number == NumberRequest.Text) 
+                        {
+                            isCurrent = false;
+                            MessageBox.Show("Заявка c таким номером уже существует", "Сообщение", MessageBoxButtons.OK, MessageBoxIcon.Error);
+
+                        } 
                     }
 
                     if (isCurrent)
@@ -249,75 +315,16 @@ namespace Pharmacy
                             {
                                 db.SaveChanges();
                                 MessageBox.Show("Заявка создана", "Сообщение", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                                MedicineInRequest = new();
+                                MedicineInRequest.Clear();
+                                issueList.ItemsSource = MedicineInRequest;
+
                             }
                             catch { MessageBox.Show("Заявка не создана", "Сообщение", MessageBoxButtons.OK, MessageBoxIcon.Error); }
                         }
                     }
-                    
                 }
                 Provider.Text = "";
                 NumberRequest.Text = "";
-            }
-        }
-
-        private void sortUserComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            Update();
-        }
-
-        private void filterUserComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            Update();
-        }
-
-        private void searchBox_TextChanged(object sender, TextChangedEventArgs e)
-        {
-            Update();
-        }
-
-        private void Update()
-        {
-            using (PharmacyDbContext db = new PharmacyDbContext())
-            {
-
-                var current = db.Medicines.ToList();
-                medicineListView.ItemsSource = current;
-
-                if (sortUserComboBox.SelectedIndex != -1)
-                {
-                    if (sortUserComboBox.SelectedValue == "По убыванию цены")
-                    {
-                        current = db.Medicines.OrderByDescending(u => u.SalePrice).ToList();
-                    }
-
-                    if (sortUserComboBox.SelectedValue == "По возрастанию цены")
-                    {
-                        current = db.Medicines.OrderBy(u => u.SalePrice).ToList();
-                    }
-                }
-
-                if(filterUserComboBox.SelectedIndex != -1)
-                {
-                    if (db.Medicines.Select(u => u.Manufacture).Distinct().ToList().Contains(filterUserComboBox.SelectedValue))
-                    {
-                        current = current.Where(u => u.Manufacture == filterUserComboBox.SelectedValue.ToString()).ToList();
-                    }
-                    else
-                    {
-                        current = current.ToList();
-                    }
-                }
-
-                if (searchBox.Text.Length > 0)
-                {
-
-                    current = current.Where(u => u.Name.Contains(searchBox.Text) || u.Manufacture.Contains(searchBox.Text)).ToList();
-
-                }
-
-                medicineListView.ItemsSource = current;
-                countProducts.Text = $"Количество: {current.Count} из {db.Medicines.ToList().Count}";
             }
         }
 
@@ -394,7 +401,9 @@ namespace Pharmacy
                                 {
                                     db.SaveChanges();
                                     MessageBox.Show("Накладная принята", "Сообщение", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                                    AcceptMedic = new();
+                                    AcceptMedic.Clear();
+                                    addedMedInAcceptList.ItemsSource = AcceptMedic;
+
                                 }
                                 catch (Exception)
                                 {
@@ -440,7 +449,7 @@ namespace Pharmacy
                     MessageBox.Show("Лекарство не добавлено в заказ", "Сообщение", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
-            
+
             addedMedInOrderList.ItemsSource = MedicineInOrder;
         }
 
@@ -482,7 +491,8 @@ namespace Pharmacy
                     try
                     {
                         db.SaveChanges();
-                        MedicineInOrder = new();
+                        MedicineInOrder.Clear();
+                        addedMedInOrderList.ItemsSource = MedicineInOrder;
                         MessageBox.Show("Заказ создан", "Сообщение", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     }
                     catch (Exception)
